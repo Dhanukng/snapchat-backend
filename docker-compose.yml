@@ -1,54 +1,30 @@
 version: '3.9'
-
 services:
-  postgres:
-    image: postgres:16-alpine
+  mysql:
+    image: mysql:8.4
+    container_name: snap-mysql
+    restart: unless-stopped
     environment:
-      POSTGRES_DB: snapdb
-      POSTGRES_USER: snapuser
-      POSTGRES_PASSWORD: snappass
+      MYSQL_DATABASE: snapdb
+      MYSQL_USER: snapuser
+      MYSQL_PASSWORD: snappass
+      MYSQL_ROOT_PASSWORD: rootpass
     ports:
-      - "5432:5432"
+      - "3306:3306"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-prootpass"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
 
   redis:
     image: redis:7-alpine
+    container_name: snap-redis
+    restart: unless-stopped
     ports:
       - "6379:6379"
 
-  minio:
-    image: minio/minio:latest
-    environment:
-      MINIO_ROOT_USER: minioadmin
-      MINIO_ROOT_PASSWORD: minioadmin
-    command: server /data --console-address ":9001"
-    ports:
-      - "9000:9000"
-      - "9001:9001"
-    volumes:
-      - minio_data:/data
-
-  app:
-    build: .
-    depends_on:
-      - postgres
-      - redis
-      - minio
-    environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/snapdb
-      SPRING_DATASOURCE_USERNAME: snapuser
-      SPRING_DATASOURCE_PASSWORD: snappass
-      SPRING_REDIS_HOST: redis
-      SPRING_REDIS_PORT: 6379
-      AWS_S3_ENDPOINT: http://minio:9000
-      AWS_S3_ACCESS_KEY: minioadmin
-      AWS_S3_SECRET_KEY: minioadmin
-      AWS_S3_BUCKET: snap-media
-      JWT_SECRET: change-me-to-a-long-secret
-    ports:
-      - "8080:8080"
-
 volumes:
-  postgres_data:
-  minio_data:
+  mysql_data:
