@@ -1,0 +1,10 @@
+# compiles with Java 21, Spring Boot 3.x, PostgreSQL, Redis, Swagger, JWT, and Docker
+
+# Maven
+mvn clean package
+
+# Run locally
+mvn spring-boot:run
+
+# Docker
+docker compose up --build
